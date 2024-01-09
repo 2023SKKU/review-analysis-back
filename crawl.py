@@ -12,27 +12,6 @@ from header_info import review_cookies, review_headers, trend_cookies, trend_hea
 review_api = ['https://smartstore.naver.com/i/v1/reviews/paged-reviews', 'https://brand.naver.com/n/v1/reviews/paged-reviews']
 origin_li = ['https://smartstore.naver.com', 'https://brand.naver.com']
 
-# cookies = {
-#     'NNB': 'GTZ22E7ZJ5HGK',
-# }
-
-# headers = {
-#     'authority': 'smartstore.naver.com',
-#     'accept': 'application/json, text/plain, */*',
-#     'accept-language': 'ko-KR,ko;q=0.9',
-#     'content-type': 'application/json;charset=UTF-8',
-#     # 'cookie': 'NNB=GTZ22E7ZJ5HGK',
-#     'origin': 'https://smartstore.naver.com',
-#     'referer': 'https://smartstore.naver.com/breastdak/products/7290642963',
-#     'sec-ch-ua': '"Google Chrome";v="119", "Chromium";v="119", "Not?A_Brand";v="24"',
-#     'sec-ch-ua-mobile': '?0',
-#     'sec-ch-ua-platform': '"Windows"',
-#     'sec-fetch-dest': 'empty',
-#     'sec-fetch-mode': 'cors',
-#     'sec-fetch-site': 'same-origin',
-#     'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36',
-# }
-
 
 def check_url(url: str):
     res = requests.get(url, cookies=review_cookies, headers=review_headers)

@@ -7,34 +7,35 @@ import pandas as pd
 from custom_error import NotValidKeywordError, NotEnoughSearchVolumeError
 import datetime
 from dateutil.relativedelta import relativedelta
+from header_info import review_cookies, review_headers, trend_cookies, trend_headers
 
 review_api = ['https://smartstore.naver.com/i/v1/reviews/paged-reviews', 'https://brand.naver.com/n/v1/reviews/paged-reviews']
 origin_li = ['https://smartstore.naver.com', 'https://brand.naver.com']
 
-cookies = {
-    'NNB': 'GTZ22E7ZJ5HGK',
-}
+# cookies = {
+#     'NNB': 'GTZ22E7ZJ5HGK',
+# }
 
-headers = {
-    'authority': 'smartstore.naver.com',
-    'accept': 'application/json, text/plain, */*',
-    'accept-language': 'ko-KR,ko;q=0.9',
-    'content-type': 'application/json;charset=UTF-8',
-    # 'cookie': 'NNB=GTZ22E7ZJ5HGK',
-    'origin': 'https://smartstore.naver.com',
-    'referer': 'https://smartstore.naver.com/breastdak/products/7290642963',
-    'sec-ch-ua': '"Google Chrome";v="119", "Chromium";v="119", "Not?A_Brand";v="24"',
-    'sec-ch-ua-mobile': '?0',
-    'sec-ch-ua-platform': '"Windows"',
-    'sec-fetch-dest': 'empty',
-    'sec-fetch-mode': 'cors',
-    'sec-fetch-site': 'same-origin',
-    'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36',
-}
+# headers = {
+#     'authority': 'smartstore.naver.com',
+#     'accept': 'application/json, text/plain, */*',
+#     'accept-language': 'ko-KR,ko;q=0.9',
+#     'content-type': 'application/json;charset=UTF-8',
+#     # 'cookie': 'NNB=GTZ22E7ZJ5HGK',
+#     'origin': 'https://smartstore.naver.com',
+#     'referer': 'https://smartstore.naver.com/breastdak/products/7290642963',
+#     'sec-ch-ua': '"Google Chrome";v="119", "Chromium";v="119", "Not?A_Brand";v="24"',
+#     'sec-ch-ua-mobile': '?0',
+#     'sec-ch-ua-platform': '"Windows"',
+#     'sec-fetch-dest': 'empty',
+#     'sec-fetch-mode': 'cors',
+#     'sec-fetch-site': 'same-origin',
+#     'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36',
+# }
 
 
 def check_url(url: str):
-    res = requests.get(url, cookies=cookies, headers=headers)
+    res = requests.get(url, cookies=review_cookies, headers=review_headers)
     html = res.text
     soup = bs(html, 'html.parser')
     json_element = soup.select_one('body > script')
@@ -49,7 +50,8 @@ def get_crawl_data(url: str, filename: str):
     wr = csv.writer(cf)
     wr.writerow(['userid', 'content', 'star_rating', 'time'])
     api_idx = 0
-
+    
+    headers = review_headers.copy()
     headers['referer'] = url
     if url[8:28] == 'smartstore.naver.com':
         api_idx = 0
@@ -60,7 +62,7 @@ def get_crawl_data(url: str, filename: str):
     
     headers['origin'] = origin_li[api_idx]
 
-    res = requests.get(url, cookies=cookies, headers=headers)
+    res = requests.get(url, cookies=review_cookies, headers=headers)
     html = res.text
     # print(html)
     soup = bs(html, 'html.parser')
@@ -91,7 +93,7 @@ def get_crawl_data(url: str, filename: str):
             json_data['page'] = i
             res = requests.post(
                 review_api[api_idx],
-                cookies=cookies,
+                cookies=review_cookies,
                 headers=headers,
                 json=json_data,
             )
@@ -117,34 +119,6 @@ def get_crawl_data(url: str, filename: str):
     return filename
 
 
-cookies_trend = {
-    'NNB': '3PM2SQOU6VFWI',
-    'ASID': 'afc335a00000018808d00bf600000053',
-    '_ga': 'GA1.2.1183798841.1684295968',
-    'm_loc': 'a79f082866164b5cbd5def9f414b20d2378ad517b2394162ddde5927eed53cfe',
-    'NV_WETR_LAST_ACCESS_RGN_M': '"MDIxMTE1NjY="',
-    'NV_WETR_LOCATION_RGN_M': '"MDIxMTE1NjY="',
-    'nx_ssl': '2',
-    '_datalab_cid': '50000000',
-    'page_uid': 'ink/fsp0J1sssuiQZYNssssss+V-226264',
-}
-
-headers_trend = {
-    'authority': 'datalab.naver.com',
-    'accept': '*/*',
-    'accept-language': 'ko,en;q=0.9,en-US;q=0.8,ja;q=0.7',
-    'content-type': 'application/x-www-form-urlencoded; charset=UTF-8',
-    # 'cookie': 'NNB=3PM2SQOU6VFWI; ASID=afc335a00000018808d00bf600000053; _ga=GA1.2.1183798841.1684295968; m_loc=a79f082866164b5cbd5def9f414b20d2378ad517b2394162ddde5927eed53cfe; NV_WETR_LAST_ACCESS_RGN_M="MDIxMTE1NjY="; NV_WETR_LOCATION_RGN_M="MDIxMTE1NjY="; nx_ssl=2; _datalab_cid=50000000; page_uid=ink/fsp0J1sssuiQZYNssssss+V-226264',
-    'origin': 'https://datalab.naver.com',
-    'referer': 'https://datalab.naver.com/shoppingInsight/sKeyword.naver',
-    'sec-fetch-dest': 'empty',
-    'sec-fetch-mode': 'cors',
-    'sec-fetch-site': 'none',
-    'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36',
-    'x-requested-with': 'XMLHttpRequest',
-}
-
-
 def make_date_li(start_date, end_date):
     data = {
         'cid': '50000006',
@@ -159,8 +133,8 @@ def make_date_li(start_date, end_date):
 
     res = requests.post(
         'https://datalab.naver.com/shoppingInsight/getKeywordClickTrend.naver',
-        cookies=cookies_trend,
-        headers=headers_trend,
+        cookies=trend_cookies,
+        headers=trend_headers,
         data=data,
     )
 
@@ -210,8 +184,8 @@ def get_search_volume(keyword: str):
 
     res = requests.post(
         'https://datalab.naver.com/shoppingInsight/getKeywordClickTrend.naver',
-        cookies=cookies_trend,
-        headers=headers_trend,
+        cookies=trend_cookies,
+        headers=trend_headers,
         data=data,
     )
     print(res.text)
@@ -243,4 +217,3 @@ def get_search_volume(keyword: str):
     
     print(keyword, temp)
     return temp
-    

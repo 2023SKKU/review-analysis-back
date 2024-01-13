@@ -195,4 +195,4 @@ def get_search_volume(keyword: str):
         temp.append(0)
     
     print(keyword, temp)
-    return temp
+    return temp, date_li[0], date_li[-1]

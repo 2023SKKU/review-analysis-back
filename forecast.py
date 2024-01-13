@@ -10,8 +10,8 @@ from crawl import get_search_volume
 
 
 def predict_trend(text, product_name, category):
-    product_trend = get_search_volume(product_name)
-    cat_trend = get_search_volume(category)
+    product_trend, start_date, end_date = get_search_volume(product_name)
+    cat_trend, start_date, end_date = get_search_volume(category)
 
     print('test', len(product_trend), product_trend)
     print('test', len(cat_trend), cat_trend)
@@ -62,7 +62,7 @@ def predict_trend(text, product_name, category):
     y_pred = y_pred.detach().cpu().numpy().flatten()[:52]
     print(y_pred)
     final_y = 100*(y_pred-np.min(y_pred))/(np.max(y_pred)-np.min(y_pred))
-    return product_trend, final_y
+    return product_trend, final_y, start_date, end_date
 
 def summarize(text_li, tokenizer, model):
     text = ' '.join(text_li)

@@ -71,21 +71,22 @@ class FeatureExtraction:
         # self.documents = self.documents[:100]
         # self.timestamps = self.timestamps[:100]
 
-        self.timestamps.sort()
-        min_year = self.timestamps[0].year
-        min_month = self.timestamps[0].month
-        max_year = self.timestamps[-1].year
-        max_month = self.timestamps[-1].month
+        sorted_timestamps = sorted(self.timestamps)
+        min_year = sorted_timestamps[0].year
+        min_month = sorted_timestamps[0].month
+        max_year = sorted_timestamps[-1].year
+        max_month = sorted_timestamps[-1].month
 
         # per month
         now_year = min_year
         now_month = min_month
         topics_over_time = []
         topic_word_per_month = {}
+
+        documents = pd.DataFrame({"Document": self.documents, "Topic": labels, "Timestamps": self.timestamps})
+
         while not (now_year == max_year and now_month > max_month):
-
-            documents = pd.DataFrame({"Document": self.documents, "Topic": labels, "Timestamps": self.timestamps})
-
+            
             start_time = datetime(now_year, now_month, 1).astimezone(timezone.utc)
             end_time = datetime(now_year if now_month < 12 else now_year + 1, now_month + 1 if now_month < 12 else 1,
                                 1).astimezone(timezone.utc)
@@ -93,8 +94,6 @@ class FeatureExtraction:
             selection = dddf[dddf['Timestamps'] < end_time]
             documents_per_topic = selection.groupby(['Topic'], as_index=False).agg({'Document': ' '.join,
                                                                                     "Timestamps": "count"})
-            print(documents_per_topic)
-            print('----------------')
             try:
                 c_tf_idf, words = self.topic_model._c_tf_idf(documents_per_topic, fit=False)
                 c_tf_idf = normalize(c_tf_idf, axis=1, norm='l1', copy=False)
@@ -131,9 +130,11 @@ class FeatureExtraction:
             now_month = now_month + 1 if now_month < 12 else 1
 
         word_tfidf_per_time, word_set = self._get_word_tfidf_per_month(topic_word_per_month, topic_idx=1)
+        # print('test', word_tfidf_per_time)
         self.word_tfidf_per_month = word_tfidf_per_time
         self.word_set = word_set
         dtm = pd.DataFrame(topics_over_time, columns=["topic", "words", "Frequency", "Timestamp"])
+
         return dtm
 
     @staticmethod

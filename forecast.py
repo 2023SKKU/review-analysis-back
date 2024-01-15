@@ -9,9 +9,9 @@ from sentence_transformers import SentenceTransformer
 from crawl import get_search_volume
 
 
-def predict_trend(text, product_name, category):
-    product_trend, start_date, end_date = get_search_volume(product_name)
-    cat_trend, start_date, end_date = get_search_volume(category)
+def predict_trend(text, product_name, category, url):
+    product_trend, start_date, end_date = get_search_volume(product_name, url)
+    cat_trend, start_date, end_date = get_search_volume(category, url)
 
     print('test', len(product_trend), product_trend)
     print('test', len(cat_trend), cat_trend)

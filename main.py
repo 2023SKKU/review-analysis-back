@@ -220,8 +220,16 @@ def crawl_analysis_background(url, filename, project_name, product_name, categor
     summ_text = ' '.join(pros_topics[0])
 
     forecasting_conducted = True
+    forecasting_warning = False
     try:
-        past_trend, forecast, start_date, end_date = predict_trend(summ_text, product_name, category)
+        past_trend, forecast, start_date, end_date = predict_trend(summ_text, product_name, category, url)
+        past_trend = [i*100 for i in past_trend]
+        zero_cnt = 0
+        for i in past_trend:
+            if i == 0:
+                zero_cnt += 1
+        if zero_cnt > 52:
+            forecasting_warning = True
     except NotValidKeywordError:
         change_user_status(client_id, 6)
         return
@@ -234,10 +242,11 @@ def crawl_analysis_background(url, filename, project_name, product_name, categor
         'pros': pros_topics,
         'cons': cons_topics,
         'csvname': filename,
-        'trend': past_trend.tolist() + forecast.tolist() if forecasting_conducted else [-1],
+        'trend': past_trend + forecast.tolist() if forecasting_conducted else [-1],
         'project_name': project_name,
         'trend_start_date': start_date if forecasting_conducted else None,
-        'trend_end_date': end_date if forecasting_conducted else None
+        'trend_end_date': end_date if forecasting_conducted else None,
+        'trend_warning': forecasting_warning
     }).execute()
     
     product_id = json.loads(product_insert.json())['data'][0]['id']

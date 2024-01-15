@@ -130,7 +130,7 @@ def make_date_li(start_date, end_date):
         data_json = data_json[-157:]
     return [item['period'] for item in data_json]
 
-def get_search_volume(keyword: str):
+def get_search_volume(keyword: str, url: str):
 
     end_date = datetime.datetime.now()
     start_date = end_date - relativedelta(years=3)
@@ -141,14 +141,36 @@ def get_search_volume(keyword: str):
     date_li = make_date_li(start_date_str, end_date_str)
     print(len(date_li), date_li)
     
-    keyword = keyword.replace('/', '')
-    keyword_id = json.loads(requests.post('https://api.itemscout.io/api/keyword', data={'keyword': keyword}).text)['data']
+    # keyword = keyword.replace('/', '')
+    # keyword_id = json.loads(requests.post('https://api.itemscout.io/api/keyword', data={'keyword': keyword}).text)['data']
 
-    category_id_list = json.loads(requests.get('https://api.itemscout.io/api/v2/keyword/products?kid={}&type=total'.format(keyword_id)).text)['data']['productListResult']
-    if len(category_id_list) == 0:
-        raise NotValidKeywordError()
+    # category_id_list = json.loads(requests.get('https://api.itemscout.io/api/v2/keyword/products?kid={}&type=total'.format(keyword_id)).text)['data']['productListResult']
+    # if len(category_id_list) == 0:
+    #     raise NotValidKeywordError()
+    headers = review_headers.copy()
+    headers['referer'] = url
+    if url[8:28] == 'smartstore.naver.com':
+        api_idx = 0
+    elif url[8:23] == 'brand.naver.com':
+        api_idx = 1
+    else:
+        return 'fail'
     
-    category_id = category_id_list[0]['categoryStack'][0]
+    headers['origin'] = origin_li[api_idx]
+
+    res = requests.get(url, cookies=review_cookies, headers=headers)
+    html = res.text
+    # print(html)
+    soup = bs(html, 'html.parser')
+    json_element = soup.select_one('body > script')
+    if json_element is None:
+        raise NotValidKeywordError('Keyword for get reviews is not valid.');
+
+    # merchantNo: categoryTree > product > A > channel > naverPaySellerNo
+    item_json = json.loads(json_element.get_text()[27:])
+    category_id = item_json["product"]["A"]["category"]["category1Id"]
+    
+    # category_id = category_id_list[0]['categoryStack'][0]
     print(category_id)
     data = {
         'cid': category_id,
@@ -167,7 +189,6 @@ def get_search_volume(keyword: str):
         headers=trend_headers,
         data=data,
     )
-    print(res.text)
 
     data_json = json.loads(res.text)['result']
     if len(data_json) == 0:
@@ -176,9 +197,6 @@ def get_search_volume(keyword: str):
 
     data_json = data_json[0]['data']
     print(len(data_json))
-    if len(data_json) < 100:
-        print('warning')
-        return
     
     if len(data_json) > 157:
         data_json = data_json[-157:]

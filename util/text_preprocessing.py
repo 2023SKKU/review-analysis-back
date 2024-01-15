@@ -28,6 +28,7 @@ class TextPreprocessing:
 
         def _get_content(row):
             x = row['content']
+            time = row['time']
             sent_tokens = self.kiwi.split_into_sents(x, return_tokens=True)
             for s in sent_tokens:
                 result = []
@@ -41,7 +42,7 @@ class TextPreprocessing:
                         result.append(w)
                 if len(result) > 1:
                     self.documents.append(' '.join(result))
-                    self.timestamps.append(datetime.strptime(row['time'], '%Y-%m-%dT%H:%M:%S.%f%z'))
+                    self.timestamps.append(datetime.strptime(time, '%Y-%m-%dT%H:%M:%S.%f%z'))
                     self.original_doc.append(s[0])
 
         if star_rating_range is not None:

@@ -7,7 +7,7 @@ from typing import Optional
 from pydantic import BaseModel
 import pandas as pd
 import json
-from crawl import get_crawl_data, check_url
+from crawl import get_crawl_data, check_url, get_product_basic_info
 from feature_extraction import FeatureExtraction
 from forecast import predict_trend, summarize
 from os import path
@@ -166,6 +166,14 @@ def get_list():
     res = json.loads(supabase.table('products').select('id, project_name').execute().json())['data']
     return {'success': True, 'list': res}
 
+@app.get('/basicinfo')
+def get_basic_info(url: str):
+    try:
+        res = get_product_basic_info(url)
+        return {'success': True, 'data': res}
+    except Exception as e:
+        print(e)
+        return {'success': False, 'data': None}
 
 # @app.websocket("/ws/{client_id}")
 # async def websocket_endpoint(websocket: WebSocket, client_id: str):
@@ -235,6 +243,8 @@ def crawl_analysis_background(url, filename, project_name, product_name, categor
         return
     except NotEnoughSearchVolumeError:
         forecasting_conducted = False
+    except:
+        change_user_status(client_id, 6)
 
     # db
     product_insert = supabase.table('products').insert({

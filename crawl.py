@@ -98,6 +98,48 @@ def get_crawl_data(url: str, filename: str):
     return filename
 
 
+def get_product_basic_info(url):
+    headers = review_headers.copy()
+    headers['referer'] = url
+    if url[8:28] == 'smartstore.naver.com':
+        api_idx = 0
+    elif url[8:23] == 'brand.naver.com':
+        api_idx = 1
+    else:
+        return 'fail'
+    
+    headers['origin'] = origin_li[api_idx]
+
+    res = requests.get(url, cookies=review_cookies, headers=headers)
+    html = res.text
+
+    soup = bs(html, 'html.parser')
+    json_element = soup.select_one('body > script')
+    if json_element is None:
+        raise NotValidKeywordError('Keyword for get reviews is not valid.');
+
+    # merchantNo: categoryTree > product > A > channel > naverPaySellerNo
+    item_json = json.loads(json_element.get_text()[27:])
+    product_name = item_json["product"]["A"]["name"]
+    category_list = item_json["product"]["A"]["category"]["wholeCategoryName"].split('>')
+    review_cnt = item_json["product"]["A"]["reviewAmount"]["totalReviewCount"]
+    brand_name = item_json["product"]["A"]["naverShoppingSearchInfo"]["brandName"]
+    try:
+        model_name = item_json["product"]["A"]["naverShoppingSearchInfo"]["modelName"]
+    except:
+        model_name = None
+    word_list = [item['text'] for item in item_json["product"]["A"]["seoInfo"]["sellerTags"]]
+    img_url = item_json["product"]["A"]["productImages"][0]["url"]
+    return {'product_name': product_name, 
+            'category_list': category_list, 
+            'review_cnt': review_cnt,
+            'brand_name': brand_name,
+            'model_name': model_name,
+            'word_list': word_list,
+            'img_url': img_url}
+
+
+
 def make_date_li(start_date, end_date):
     data = {
         'cid': '50000006',

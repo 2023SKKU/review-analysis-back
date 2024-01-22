@@ -47,7 +47,7 @@ def predict_trend(text, product_name, category, url):
             use_text=1,
             use_img=0,
             trend_len=157,
-            num_trends=2,
+            num_trends=3,
             use_encoder_mask=1,
             autoregressive=0,
             gpu_num=0

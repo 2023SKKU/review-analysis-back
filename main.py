@@ -17,6 +17,8 @@ import datetime as dt
 from transformers import PreTrainedTokenizerFast
 from transformers import BartForConditionalGeneration
 from custom_error import NotValidKeywordError, NotEnoughSearchVolumeError
+from statsmodels.tsa.seasonal import STL
+from sklearn.preprocessing import MinMaxScaler
 import json
 
 load_dotenv()
@@ -145,7 +147,13 @@ def get_data(product_id: int):
         return {'success': False, 'message': 'not exist item'}
     dtm_res = json.loads(supabase.table('dtm').select('*').eq('product_id', product_id).execute().json())['data']
 
-    return {'success': True, 'p_data': res, 'dtm_result': dtm_res}
+    series_decompose = pd.Series(res[0]['trend'], index=pd.date_range(start="12-31-2018", end="1-2-2023", freq="W"), name="seasonal")
+    stl = STL(series_decompose, seasonal=13, period=12)
+    decompose_res = stl.fit()
+    seasonal_data = decompose_res.seasonal.values.tolist()
+    trend_data = decompose_res.trend.values.tolist()
+
+    return {'success': True, 'p_data': res, 'dtm_result': dtm_res, 'decomposed_trend': trend_data, 'decomposed_seasonal': seasonal_data}
 
 
 @app.get('/getoriginalreview')

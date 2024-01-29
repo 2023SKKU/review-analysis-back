@@ -14,6 +14,7 @@ class TextPreprocessing:
         self.documents = []
         self.timestamps = []
         self.original_doc = []
+        self.star_rating_list = []
         self.kiwi = Kiwi(typos='basic')
 
     def add_stopwords(self, word):
@@ -29,21 +30,24 @@ class TextPreprocessing:
         def _get_content(row):
             x = row['content']
             time = row['time']
-            sent_tokens = self.kiwi.split_into_sents(x, return_tokens=True)
-            for s in sent_tokens:
-                result = []
-                word_tokens = s[3]
-                for t in word_tokens:
-                    w = t[0]
-                    p = t[1]
-                    if len(w) <= 1 or w in self.stopwords:
-                        continue
-                    if p in pos_list:
-                        result.append(w)
-                if len(result) > 1:
-                    self.documents.append(' '.join(result))
-                    self.timestamps.append(datetime.strptime(time, '%Y-%m-%dT%H:%M:%S.%f%z'))
-                    self.original_doc.append(s[0])
+            sr = row['star_rating']
+            # sent_tokens = self.kiwi.split_into_sents(x, return_tokens=True)
+            # for s in sent_tokens:
+            result = []
+            word_tokens = self.kiwi.tokenize(x)
+            # print(word_tokens)
+            for word in word_tokens:
+                w = word[0]
+                p = word[1]
+                if len(w) <= 1 or w in self.stopwords:
+                    continue
+                if p in pos_list:
+                    result.append(w)
+            if len(result) > 1:
+                self.documents.append(' '.join(result))
+                self.timestamps.append(datetime.strptime(time, '%Y-%m-%dT%H:%M:%S.%f%z'))
+                self.original_doc.append(x)
+                self.star_rating_list.append(sr)
 
         if star_rating_range is not None:
             df = df[(df['star_rating'] >= star_rating_range[0]) & (df['star_rating'] <= star_rating_range[1])]

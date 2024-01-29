@@ -37,6 +37,7 @@ class FeatureExtraction:
                          nr_topics=n_topic,
                          top_n_words=30,
                          calculate_probabilities=True)
+        print(text_pp.documents[:10])
         model.fit_transform(text_pp.documents) #[:100])
         self.topic_model = model
         self.n_topic = n_topic
@@ -44,11 +45,16 @@ class FeatureExtraction:
         self.documents = text_pp.documents
         print('traning end')
         if star_rating_range is None:
-            return self.raw_data.content[:10].values.tolist(), [{'document': text_pp.original_doc[i], 'tokens': self.documents[i], 'topic': self.topic_model.topics_[i], 'month': '{}. {}.'.format(self.timestamps[i].year, self.timestamps[i].month)} for i in range(len(self.timestamps))]
+            return self.raw_data.content[:10].values.tolist(), [{'document': text_pp.original_doc[i], 
+                                                                 'tokens': self.documents[i], 
+                                                                 'topic': self.topic_model.topics_[i], 
+                                                                 'month': '{}. {}.'.format(self.timestamps[i].year, self.timestamps[i].month), 
+                                                                 'star_rating': text_pp.star_rating_list[i],
+                                                                 'representative_topic': None} for i in range(len(self.timestamps))]
 
 
     def optimize_topic_number(self):
-        raise "not implemented.. sorry"
+        raise "not implemented"
 
     def get_topics_with_keyword(self, top_n_word=10):
         ret = []
@@ -61,7 +67,10 @@ class FeatureExtraction:
                 tmp.append(w)
             print(*tmp)
             ret.append(tmp)
-        return ret
+        
+        rep_docs = [self.topic_model.representative_docs_[key] for key in self.topic_model.representative_docs_.keys()]
+                
+        return ret, rep_docs
 
     def get_topics_per_month(self):
         labels = self.topic_model.topics_

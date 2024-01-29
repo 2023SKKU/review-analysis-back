@@ -9,7 +9,7 @@ import datetime
 from dateutil.relativedelta import relativedelta
 from header_info import review_cookies, review_headers, trend_cookies, trend_headers
 
-review_api = ['https://smartstore.naver.com/i/v1/reviews/paged-reviews', 'https://brand.naver.com/n/v1/reviews/paged-reviews']
+review_api = ['https://smartstore.naver.com/i/v1/contents/reviews/query-pages', 'https://brand.naver.com/n/v1/contents/reviews/query-pages']
 origin_li = ['https://smartstore.naver.com', 'https://brand.naver.com']
 
 
@@ -56,18 +56,18 @@ def get_crawl_data(url: str, filename: str):
 
     print(merchantNo, originProductNo)
     json_data = {
+        'checkoutMerchantNo': merchantNo,
+        'originProductNo': originProductNo,
         'page': 1,
         'pageSize': 20,
-        'merchantNo': str(merchantNo),
-        'originProductNo': str(originProductNo),
-        'sortType': 'REVIEW_RANKING',
+        'reviewSearchSortType': 'REVIEW_RANKING',
     }
 
     try:
         i = 1
         total_review_num = 20
         while i <= math.ceil(total_review_num / 20):
-            if i > 100:
+            if i > 1000:
                 break
             json_data['page'] = i
             res = requests.post(
@@ -85,7 +85,7 @@ def get_crawl_data(url: str, filename: str):
             total_review_num = int(review_json['totalElements'])
             i += 1
             for item in review_cont:
-                userid = item['writerMemberId']
+                userid = item['writerId']
                 cont = item['reviewContent']
                 review_time = item['createDate']
                 cont = cont.replace('\n', ' ').replace(',', ' ')
@@ -106,7 +106,7 @@ def get_product_basic_info(url):
     elif url[8:23] == 'brand.naver.com':
         api_idx = 1
     else:
-        return 'fail'
+        raise Exception
     
     headers['origin'] = origin_li[api_idx]
 

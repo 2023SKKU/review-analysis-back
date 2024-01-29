@@ -18,7 +18,6 @@ from transformers import PreTrainedTokenizerFast
 from transformers import BartForConditionalGeneration
 from custom_error import NotValidKeywordError, NotEnoughSearchVolumeError
 from statsmodels.tsa.seasonal import STL
-from sklearn.preprocessing import MinMaxScaler
 import json
 
 load_dotenv()
@@ -174,6 +173,7 @@ def get_list():
     res = json.loads(supabase.table('products').select('id, project_name').execute().json())['data']
     return {'success': True, 'list': res}
 
+
 @app.get('/basicinfo')
 def get_basic_info(url: str):
     try:
@@ -182,6 +182,15 @@ def get_basic_info(url: str):
     except Exception as e:
         print(e)
         return {'success': False, 'data': None}
+    
+
+@app.get('/representative_review')
+def get_representative_topic(product_id: int):
+    try:
+        res = json.loads(supabase.table('originaldoc').select('document, month, star_rating, representative_topic').eq('product_id', product_id).not_.is_('representative_topic', 'null').execute().json())['data']
+        return {'success': True, 'representative_review': res}
+    except:
+        return {'success': False, 'representative_review': None}
 
 # @app.websocket("/ws/{client_id}")
 # async def websocket_endpoint(websocket: WebSocket, client_id: str):
@@ -210,11 +219,14 @@ def crawl_analysis_background(url, filename, project_name, product_name, categor
     fe = FeatureExtraction()
     # pros extraction
     fe.train_topic_model_with_bertopic(filename, product_name, star_rating_range=[5, 5])
-    pros_topics = fe.get_topics_with_keyword(top_n_word=10)
+    pros_topics, pros_rep_token = fe.get_topics_with_keyword(top_n_word=10)
+    
+    
+
     # cons extraction
     try:
         fe.train_topic_model_with_bertopic(filename, product_name, star_rating_range=[1, 3])
-        cons_topics = fe.get_topics_with_keyword(top_n_word=10)
+        cons_topics, cons_rep_token = fe.get_topics_with_keyword(top_n_word=10)
     except:
         cons_topics = []
     print(pros_topics)
@@ -228,6 +240,21 @@ def crawl_analysis_background(url, filename, project_name, product_name, categor
     review_to_summ, original_doc = fe.train_topic_model_with_bertopic(filename, product_name)
     dtm_result = fe.get_topics_per_month().to_dict('records')
 
+    for topic_idx in range(len(pros_rep_token)):
+        topic_tokens = pros_rep_token[topic_idx]
+        for tokens in topic_tokens:
+            for i in range(len(original_doc)):
+                if original_doc[i]['tokens'] == tokens:
+                    original_doc[i]['representative_topic'] = topic_idx+1
+                    
+    if len(cons_topics) > 0:
+        for topic_idx in range(len(cons_rep_token)):
+            topic_tokens = cons_rep_token[topic_idx]
+            for tokens in topic_tokens:
+                for i in range(len(original_doc)):
+                    if original_doc[i]['tokens'] == tokens:
+                        original_doc[i]['representative_topic'] = -(topic_idx+1)
+                        
     try:
         change_user_status(client_id, 4)
     except:
@@ -264,12 +291,14 @@ def crawl_analysis_background(url, filename, project_name, product_name, categor
         'project_name': project_name,
         'trend_start_date': start_date if forecasting_conducted else None,
         'trend_end_date': end_date if forecasting_conducted else None,
-        'trend_warning': forecasting_warning
+        'trend_warning': forecasting_warning,
+        'trend_keyword1': product_name,
+        'trend_keyword2': category
     }).execute()
     
     product_id = json.loads(product_insert.json())['data'][0]['id']
     print(original_doc[0])
-    original_doc = [{'document': i['document'], 'tokens': i['tokens'], 'topic': i['topic'], 'month': i['month'], 'product_id': product_id} for i in original_doc]
+    original_doc = [{'document': i['document'], 'tokens': i['tokens'], 'topic': i['topic'], 'month': i['month'], 'product_id': product_id, 'representative_topic': i['representative_topic']} for i in original_doc]
     supabase.table("originaldoc").insert(original_doc).execute()
 
     dtm_result = [{'topic': i['topic'], 'month': i['Timestamp'], 'words': i['words'], 'product_id': product_id} for i in dtm_result]

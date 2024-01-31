@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 from bertopic.representation import KeyBERTInspired
 from bertopic import BERTopic
-from util.text_preprocessing import TextPreprocessing, SimpleTokenizerForBERTopic
+from service.text_preprocessing import TextPreprocessing, SimpleTokenizerForBERTopic
 from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 from sklearn.preprocessing import normalize
 from datetime import datetime, timezone

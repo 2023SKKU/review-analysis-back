@@ -2,11 +2,11 @@ import torch
 import pandas as pd
 import numpy as np
 import pytorch_lightning as pl
-from GTM import GTM
+from service.GTM import GTM
 from pathlib import Path
 from sklearn.preprocessing import MinMaxScaler
 from sentence_transformers import SentenceTransformer
-from crawl import get_search_volume
+from service.crawl import get_search_volume
 
 
 def predict_trend(text, product_name, category, url):
@@ -54,7 +54,7 @@ def predict_trend(text, product_name, category, url):
         )
     
     print('load start')
-    model.load_state_dict(torch.load('gtm-summed.ckpt', map_location=device)['state_dict'], strict=False)
+    model.load_state_dict(torch.load('../gtm-summed.ckpt', map_location=device)['state_dict'], strict=False)
     print('load end')
     model.to(device)
     model.eval()

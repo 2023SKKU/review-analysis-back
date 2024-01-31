@@ -4,10 +4,10 @@ import json
 import csv
 import math
 import pandas as pd
-from custom_error import NotValidKeywordError, NotEnoughSearchVolumeError
+from service.custom_error import NotValidKeywordError, NotEnoughSearchVolumeError
 import datetime
 from dateutil.relativedelta import relativedelta
-from header_info import review_cookies, review_headers, trend_cookies, trend_headers
+from service.header_info import review_cookies, review_headers, trend_cookies, trend_headers
 
 review_api = ['https://smartstore.naver.com/i/v1/contents/reviews/query-pages', 'https://brand.naver.com/n/v1/contents/reviews/query-pages']
 origin_li = ['https://smartstore.naver.com', 'https://brand.naver.com']

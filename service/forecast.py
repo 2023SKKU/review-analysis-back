@@ -54,7 +54,7 @@ def predict_trend(text, product_name, category, url):
         )
     
     print('load start')
-    model.load_state_dict(torch.load('../gtm-summed.ckpt', map_location=device)['state_dict'], strict=False)
+    model.load_state_dict(torch.load('util/gtm-summed.ckpt', map_location=device)['state_dict'], strict=False)
     print('load end')
     model.to(device)
     model.eval()

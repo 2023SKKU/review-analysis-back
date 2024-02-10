@@ -2,8 +2,10 @@ from fastapi import APIRouter
 import json
 from statsmodels.tsa.seasonal import STL
 import pandas as pd
-from service.crawl import get_crawl_data, check_url, get_product_basic_info
+from service.crawl import get_product_basic_info
 from db.init_db import supabase
+from service.autoperiod import calc_seasonality_score
+import numpy as np
 
 router = APIRouter()
 
@@ -20,7 +22,9 @@ def get_data(product_id: int):
     seasonal_data = decompose_res.seasonal.values.tolist()
     trend_data = decompose_res.trend.values.tolist()
 
-    return {'success': True, 'p_data': res, 'dtm_result': dtm_res, 'decomposed_trend': trend_data, 'decomposed_seasonal': seasonal_data}
+    period, seasonality_score = calc_seasonality_score(np.array(res[0]['trend'][:157]))
+
+    return {'success': True, 'p_data': res, 'dtm_result': dtm_res, 'decomposed_trend': trend_data, 'decomposed_seasonal': seasonal_data, 'seasonality_score': seasonality_score, 'period': period}
 
 
 @router.get('/getoriginalreview')
@@ -59,3 +63,13 @@ def get_representative_topic(product_id: int):
         return {'success': True, 'representative_review': res}
     except:
         return {'success': False, 'representative_review': None}
+    
+
+@router.get('/project_status')
+def get_project_status():
+    try:
+        with open('util/user_status.json', 'r') as file:
+            user_status = json.load(file)
+            return {'success': True, 'status': user_status}
+    except:
+        return {'success': False, 'status': {}}

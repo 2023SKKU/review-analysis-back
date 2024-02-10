@@ -15,11 +15,9 @@ class StartParam(BaseModel):
     project_name: str
     product_name: str
     category: str
-    client_id: str
 
 @router.post('/start')
 def crawl_data(info: StartParam, background_tasks: BackgroundTasks):
-    change_user_status(info.client_id, 0)
     now = dt.datetime.now()
     now_str = now.strftime("%Y%m%d%H%M%S")
     filename = 'csv/reviews_{}.csv'.format(now_str)
@@ -27,6 +25,6 @@ def crawl_data(info: StartParam, background_tasks: BackgroundTasks):
     if len(project_names['data']) > 0:
         return {'success': False, 'message': 'exist project name', 'code': 2}
     if check_url(info.url):
-        background_tasks.add_task(crawl_analysis_background, info.url, filename, info.project_name, info.product_name, info.category, info.client_id)
+        background_tasks.add_task(crawl_analysis_background, info.url, filename, info.project_name, info.product_name, info.category)
         return {'success': True, 'message': 'crawling in background', 'code': 0}
     return {'success': False, 'message': 'failed to get information, check your url', 'code': 1}

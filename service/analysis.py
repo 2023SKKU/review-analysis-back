@@ -1,21 +1,21 @@
 from service.crawl import get_crawl_data
 from service.custom_error import NotValidKeywordError, NotEnoughSearchVolumeError
-from util.handle_user import change_user_status
+from util.handle_user import change_user_status, delete_status
 from service.feature_extraction import FeatureExtraction
 from service.forecast import predict_trend
 import json
 from api.endpoint.data import supabase
 
-def crawl_analysis_background(url, filename, project_name, product_name, category, client_id):
+def crawl_analysis_background(url, filename, project_name, product_name, category):
     
     # revire crawling
+    change_user_status(project_name, 1)
     try:
         res = get_crawl_data(url, filename)
     except NotValidKeywordError:
-        change_user_status(client_id, 6)
+        change_user_status(project_name, 6)
         return
-    
-    change_user_status(client_id, 2)
+    change_user_status(project_name, 2)
     
     fe = FeatureExtraction()
     # pros extraction
@@ -29,7 +29,7 @@ def crawl_analysis_background(url, filename, project_name, product_name, categor
     except:
         cons_topics = []
 
-    change_user_status(client_id, 3)
+    change_user_status(project_name, 3)
 
 
     # dtm
@@ -50,11 +50,9 @@ def crawl_analysis_background(url, filename, project_name, product_name, categor
                 for i in range(len(original_doc)):
                     if original_doc[i]['tokens'] == tokens:
                         original_doc[i]['representative_topic'] = -(topic_idx+1)
-                        
-    try:
-        change_user_status(client_id, 4)
-    except:
-        pass
+
+    change_user_status(project_name, 4)
+
     #summ_text = summarize(review_to_summ, summ_tokenizer, summ_model)
     summ_text = ' '.join(pros_topics[0])
 
@@ -70,14 +68,14 @@ def crawl_analysis_background(url, filename, project_name, product_name, categor
         if zero_cnt > 52:
             forecasting_warning = True
     except NotValidKeywordError:
-        change_user_status(client_id, 6)
+        change_user_status(project_name, 6)
         return
     except NotEnoughSearchVolumeError:
         forecasting_conducted = False
     except:
-        change_user_status(client_id, 6)
+        change_user_status(project_name, 6)
 
-    # db
+    # # db
     product_insert = supabase.table('products').insert({
         'product_name': product_name,
         'pros': pros_topics,
@@ -99,5 +97,5 @@ def crawl_analysis_background(url, filename, project_name, product_name, categor
 
     dtm_result = [{'topic': i['topic'], 'month': i['Timestamp'], 'words': i['words'], 'product_id': product_id} for i in dtm_result]
     supabase.table("dtm").insert(dtm_result).execute()
-    
-    change_user_status(client_id, 5)
+
+    delete_status(project_name)

@@ -18,6 +18,11 @@ class StartParam(BaseModel):
 
 @router.post('/start')
 def crawl_data(info: StartParam, background_tasks: BackgroundTasks):
+    with open('util/user_status.json', 'r') as file:
+            user_status = json.load(file)
+            if len(user_status.keys()) > 0:
+                 return {'success': False, 'message': '현재 서버 리소스가 부족하여 상품 분석은 한번에 하나의 상품만 가능합니다.'}
+    change_user_status(info.project_name, 0)
     now = dt.datetime.now()
     now_str = now.strftime("%Y%m%d%H%M%S")
     filename = 'csv/reviews_{}.csv'.format(now_str)
